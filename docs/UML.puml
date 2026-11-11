@@ -1,17 +1,16 @@
 @startuml
-title Dio.Bootcamp.BancoPan.DesafioDesignPatterns — visão lógica
-actor Participante
-component "Entrada / execução" as Entrada
-component "Serviço / domínio" as Dominio
-component "ClienteService" as Componente
-component "Repositório ou adaptador" as Repositorio
-Participante --> Entrada
-Entrada --> Dominio
-Dominio --> Componente
-Componente --> Repositorio : se aplicável
-note right of Componente
-Visão didática e conceitual.
-A implementação deve ser conferida
-nos arquivos Java existentes.
-end note
+class Cliente { id; nome; endereco }
+class Endereco { cep; logradouro; bairro; localidade; uf }
+interface ClienteService { buscarTodos(); buscarPorId(); inserir(); atualizar(); deletar() }
+class ClienteServiceImpl { salvarClienteComCep() }
+interface ViaCepService { consultarCep(cep) }
+class ClienteRestController
+class ClienteRepository
+class EnderecoRepository
+ClienteService <|.. ClienteServiceImpl
+ClienteRestController --> ClienteService
+ClienteServiceImpl --> ClienteRepository
+ClienteServiceImpl --> EnderecoRepository
+ClienteServiceImpl --> ViaCepService
+Cliente --> Endereco
 @enduml
