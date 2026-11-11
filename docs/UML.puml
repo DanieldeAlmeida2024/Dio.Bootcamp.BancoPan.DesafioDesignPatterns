@@ -1,0 +1,17 @@
+@startuml
+title Dio.Bootcamp.BancoPan.DesafioDesignPatterns — visão lógica
+actor Participante
+component "Entrada / execução" as Entrada
+component "Serviço / domínio" as Dominio
+component "ClienteService" as Componente
+component "Repositório ou adaptador" as Repositorio
+Participante --> Entrada
+Entrada --> Dominio
+Dominio --> Componente
+Componente --> Repositorio : se aplicável
+note right of Componente
+Visão didática e conceitual.
+A implementação deve ser conferida
+nos arquivos Java existentes.
+end note
+@enduml
