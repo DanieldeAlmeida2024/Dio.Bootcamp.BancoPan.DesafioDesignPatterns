@@ -90,6 +90,21 @@ class ClienteServiceImplTest {
     }
 
     @Test
+    void postComIdInformadoPeloClienteNaoSobrescreveOutroCadastro() {
+        Cliente novo = cliente("Ana", "01001-000");
+        novo.setId(777L); // Não autorizar PUT disfarçado de POST.
+        Endereco cache = new Endereco();
+        cache.setCep("01001000");
+        when(enderecoRepository.findById("01001000")).thenReturn(Optional.of(cache));
+
+        service.inserir(novo);
+
+        assertNull(novo.getId(), "O serviço precisa descartar identificador de criação recebido do cliente");
+        verify(clienteRepository).save(same(novo));
+        verifyNoInteractions(viaCepService);
+    }
+
+    @Test
     void clienteInexistenteRetorna404EnaoSalva() {
         when(clienteRepository.findById(19L)).thenReturn(Optional.empty());
         ResponseStatusException erro = assertThrows(ResponseStatusException.class,
