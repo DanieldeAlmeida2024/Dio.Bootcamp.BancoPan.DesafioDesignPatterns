@@ -1,9 +1,12 @@
 package com.digitalinnovation.gof.service.impl;
 
-import java.util.Optional;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.digitalinnovation.gof.model.Cliente;
 import com.digitalinnovation.gof.model.ClienteRepository;
@@ -13,71 +16,100 @@ import com.digitalinnovation.gof.service.ClienteService;
 import com.digitalinnovation.gof.service.ViaCepService;
 
 /**
- * Implementação da <b>Strategy</b> {@link ClienteService}, a qual pode ser
- * injetada pelo Spring (via {@link Autowired}). Com isso, como essa classe é um
- * {@link Service}, ela será tratada como um <b>Singleton</b>.
- * 
- * @author falvojr
+ * Implementação didática de Strategy/Repository e Facade da integração ViaCEP.
+ * Mantém a autoria do exercício original; correções de integridade e erros HTTP.
  */
 @Service
+@Transactional
 public class ClienteServiceImpl implements ClienteService {
 
-	// Singleton: Injetar os componentes do Spring com @Autowired.
-	@Autowired
-	private ClienteRepository clienteRepository;
-	@Autowired
-	private EnderecoRepository enderecoRepository;
-	@Autowired
-	private ViaCepService viaCepService;
-	
-	// Strategy: Implementar os métodos definidos na interface.
-	// Facade: Abstrair integrações com subsistemas, provendo uma interface simples.
+    @Autowired
+    private ClienteRepository clienteRepository;
 
-	@Override
-	public Iterable<Cliente> buscarTodos() {
-		// Buscar todos os Clientes.
-		return clienteRepository.findAll();
-	}
+    @Autowired
+    private EnderecoRepository enderecoRepository;
 
-	@Override
-	public Cliente buscarPorId(Long id) {
-		// Buscar Cliente por ID.
-		Optional<Cliente> cliente = clienteRepository.findById(id);
-		return cliente.get();
-	}
+    @Autowired
+    private ViaCepService viaCepService;
 
-	@Override
-	public void inserir(Cliente cliente) {
-		salvarClienteComCep(cliente);
-	}
+    @Override
+    @Transactional(readOnly = true)
+    public Iterable<Cliente> buscarTodos() {
+        return clienteRepository.findAll();
+    }
 
-	@Override
-	public void atualizar(Long id, Cliente cliente) {
-		// Buscar Cliente por ID, caso exista:
-		Optional<Cliente> clienteBd = clienteRepository.findById(id);
-		if (clienteBd.isPresent()) {
-			salvarClienteComCep(cliente);
-		}
-	}
+    @Override
+    @Transactional(readOnly = true)
+    public Cliente buscarPorId(Long id) {
+        if (id == null || id <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID do cliente inválido");
+        }
+        return clienteRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Cliente não encontrado"));
+    }
 
-	@Override
-	public void deletar(Long id) {
-		// Deletar Cliente por ID.
-		clienteRepository.deleteById(id);
-	}
+    @Override
+    public void inserir(Cliente cliente) {
+        salvarClienteComCep(cliente);
+    }
 
-	private void salvarClienteComCep(Cliente cliente) {
-		// Verificar se o Endereco do Cliente já existe (pelo CEP).
-		String cep = cliente.getEndereco().getCep();
-		Endereco endereco = enderecoRepository.findById(cep).orElseGet(() -> {
-			// Caso não exista, integrar com o ViaCEP e persistir o retorno.
-			Endereco novoEndereco = viaCepService.consultarCep(cep);
-			enderecoRepository.save(novoEndereco);
-			return novoEndereco;
-		});
-		cliente.setEndereco(endereco);
-		// Inserir Cliente, vinculando o Endereco (novo ou existente).
-		clienteRepository.save(cliente);
-	}
+    @Override
+    public void atualizar(Long id, Cliente alteracoes) {
+        // Atualiza o registro existente em vez de criar outro com id vindo do JSON.
+        Cliente existente = buscarPorId(id);
+        validarCliente(alteracoes);
+        existente.setNome(alteracoes.getNome().trim());
+        existente.setEndereco(alteracoes.getEndereco());
+        salvarClienteComCep(existente);
+    }
 
+    @Override
+    public void deletar(Long id) {
+        buscarPorId(id);
+        clienteRepository.deleteById(id);
+    }
+
+    private void salvarClienteComCep(Cliente cliente) {
+        validarCliente(cliente);
+        String cep = normalizarCep(cliente.getEndereco().getCep());
+
+        Endereco endereco = enderecoRepository.findById(cep).orElseGet(() -> {
+            Endereco consultado;
+            try {
+                consultado = viaCepService.consultarCep(cep);
+            } catch (RuntimeException erro) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                        "Falha ao consultar o ViaCEP", erro);
+            }
+            if (consultado == null || consultado.getCep() == null ||
+                !cep.equals(consultado.getCep().replace("-", ""))) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "CEP não encontrado ou resposta inválida do ViaCEP");
+            }
+            // ViaCEP pode responder com hífen no CEP; usar um único formato no banco.
+            consultado.setCep(cep);
+            return enderecoRepository.save(consultado);
+        });
+
+        cliente.setNome(cliente.getNome().trim());
+        cliente.setEndereco(endereco);
+        clienteRepository.save(cliente);
+    }
+
+    private void validarCliente(Cliente cliente) {
+        if (cliente == null || cliente.getNome() == null || cliente.getNome().isBlank() ||
+            cliente.getEndereco() == null || cliente.getEndereco().getCep() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Nome e endereço/CEP são obrigatórios");
+        }
+    }
+
+    private String normalizarCep(String cep) {
+        if (cep == null || !cep.matches("\\d{5}-?\\d{3}")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "CEP deve conter 8 dígitos");
+        }
+        return cep.replace("-", "");
+    }
 }

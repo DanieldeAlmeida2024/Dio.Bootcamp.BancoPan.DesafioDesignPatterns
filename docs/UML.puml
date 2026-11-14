@@ -1,17 +1,22 @@
 @startuml
-title Dio.Bootcamp.BancoPan.DesafioDesignPatterns — visão lógica
-actor Participante
-component "Entrada / execução" as Entrada
-component "Serviço / domínio" as Dominio
-component "ClienteService" as Componente
-component "Repositório ou adaptador" as Repositorio
-Participante --> Entrada
-Entrada --> Dominio
-Dominio --> Componente
-Componente --> Repositorio : se aplicável
-note right of Componente
-Visão didática e conceitual.
-A implementação deve ser conferida
-nos arquivos Java existentes.
+title Design Patterns — integração e atualização de cliente
+skinparam componentStyle rectangle
+actor "Cliente HTTP" as User
+component "ClienteRestController" as Controller
+component "ClienteService <<interface>>" as Interface
+component "ClienteServiceImpl" as Facade
+database "ClienteRepository / H2" as Clientes
+database "EnderecoRepository / H2" as Enderecos
+cloud "ViaCepService (OpenFeign)" as ViaCep
+User --> Controller : POST /clientes, PUT /clientes/{id}, GET, DELETE
+Controller --> Interface
+Interface <|.. Facade
+Facade --> Clientes : findById, save, deleteById
+Facade --> Enderecos : findById(CEP normalizado)
+Facade --> ViaCep : consultarCep(CEP), só cache miss
+note bottom of Facade
+  PUT preserva ID da URL.
+  400 invalid input; 404 sem cliente;
+  422 CEP inválido da API; 502 falha de rede.
 end note
 @enduml
