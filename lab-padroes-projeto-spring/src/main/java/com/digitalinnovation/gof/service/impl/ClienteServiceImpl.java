@@ -102,10 +102,17 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     private void validarCliente(Cliente cliente) {
-        if (cliente == null || cliente.getNome() == null || cliente.getNome().isBlank() ||
+        if (cliente == null || cliente.getNome() == null ||
             cliente.getEndereco() == null || cliente.getEndereco().getCep() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Nome e endereço/CEP são obrigatórios");
+        }
+        // A validação pertence ao serviço: os controladores HTTP são somente um
+        // dos caminhos que podem chamá-lo.
+        String nome = cliente.getNome().trim();
+        if (nome.length() < 3 || nome.length() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Nome deve conter de 3 a 100 caracteres");
         }
     }
 
