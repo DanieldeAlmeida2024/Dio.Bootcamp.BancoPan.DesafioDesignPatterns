@@ -2,6 +2,7 @@ package com.digitalinnovation.gof.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,18 +42,19 @@ public class ClienteRestController {
 	@PostMapping
 	public ResponseEntity<Cliente> inserir(@RequestBody Cliente cliente) {
 		clienteService.inserir(cliente);
-		return ResponseEntity.ok(cliente);
+		return ResponseEntity.status(HttpStatus.CREATED).body(cliente);
 	}
 
 	@PutMapping("/{id}")
 	public ResponseEntity<Cliente> atualizar(@PathVariable Long id, @RequestBody Cliente cliente) {
 		clienteService.atualizar(id, cliente);
+		cliente.setId(id); // O ID da URL prevalece sobre o enviado no corpo.
 		return ResponseEntity.ok(cliente);
 	}
 
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deletar(@PathVariable Long id) {
 		clienteService.deletar(id);
-		return ResponseEntity.ok().build();
+		return ResponseEntity.noContent().build();
 	}
 }
