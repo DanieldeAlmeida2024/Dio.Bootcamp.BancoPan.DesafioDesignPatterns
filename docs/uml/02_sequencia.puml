@@ -1,0 +1,18 @@
+@startuml
+actor ClienteHTTP
+participant "ClienteRestController" as C
+participant "ClienteServiceImpl" as S
+participant "EnderecoRepository" as E
+participant "ViaCepService" as V
+participant "ClienteRepository" as R
+ClienteHTTP -> C : POST /clientes com CEP
+C -> S : inserir(cliente)
+S -> E : findById(cep)
+alt CEP não cadastrado
+ S -> V : consultarCep(cep)
+ V --> S : endereço
+ S -> E : save(endereco)
+end
+S -> R : save(cliente com endereco)
+S --> ClienteHTTP : cliente
+@enduml
