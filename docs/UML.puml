@@ -15,7 +15,9 @@ Facade --> Clientes : findById, save, deleteById
 Facade --> Enderecos : findById(CEP normalizado)
 Facade --> ViaCep : consultarCep(CEP), só cache miss
 note bottom of Facade
-  PUT preserva ID da URL.
+  POST descarta ID de entrada.
+  PUT preserva ID da URL e responde
+  entidade persistida com CEP normalizado.
   400 invalid input; 404 sem cliente;
   422 CEP inválido da API; 502 falha de rede.
 end note

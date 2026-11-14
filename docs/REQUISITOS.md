@@ -10,6 +10,8 @@ Versão 1.1.0 · 14/11/2026
 - **RF04:** buscar endereço no repositório por CEP normalizado; consultar ViaCEP apenas em cache miss.
 - **RF05:** rejeitar endereço não encontrado e distinguir falhas de integração.
 - **RF06:** responder 201 ao inserir, 200 ao consultar/atualizar e 204 ao excluir.
+- **RF07:** ignorar ID enviado em POST; não transformar cadastro em atualização de outro cliente.
+- **RF08:** após PUT, retornar a entidade persistida, incluindo o CEP normalizado, e não o objeto bruto enviado pelo cliente.
 
 ## Requisitos não funcionais
 

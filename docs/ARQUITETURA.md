@@ -17,8 +17,9 @@ O exercício demonstra **Strategy/Repository** pela interface `ClienteService` e
 1. Validar `Cliente.nome`, `Cliente.endereco` e formato de CEP. Normalizar `01001-000` para `01001000`.
 2. Verificar `EnderecoRepository.findById(cep)`. Se existir, não acessar a API externa.
 3. Se não existir, buscar ViaCEP, validar resposta e gravar endereço normalizado. Erro de comunicação => HTTP 502; resposta sem CEP => HTTP 422.
-4. Inserir cliente ou atualizar **a instância persistida do ID da URL**, não salvar indiscriminadamente o objeto enviado no JSON.
-5. Cliente inexistente => HTTP 404. Requisição sem nome ou CEP válido => HTTP 400.
+4. Em POST, **descartar ID fornecido no JSON** antes de chamar JPA save (inserir, não substituir). Em PUT, atualizar **a instância persistida do ID da URL**, não salvar indiscriminadamente o objeto enviado no JSON.
+5. O controller PUT relê o cliente persistido pelo ID para responder o estado efetivo; não retorna o objeto recebido com campos não normalizados.
+6. Cliente inexistente => HTTP 404. Requisição sem nome ou CEP válido => HTTP 400.
 
 ## Contratos HTTP
 
