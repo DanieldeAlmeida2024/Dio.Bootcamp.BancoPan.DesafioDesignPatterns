@@ -16,7 +16,7 @@ cd lab-padroes-projeto-spring
 ./mvnw spring-boot:run
 ```
 
-## Correções do contrato HTTP
+## Contrato HTTP
 
 O cadastro `POST /clientes` é criação, não atualização: qualquer `id` enviado pelo cliente é ignorado antes da persistência. O `PUT /clientes/{id}` responde com o registro **relido da persistência**, contendo o CEP normalizado e o ID realmente gravado, e não devolve simplesmente o JSON recebido. Esses dois casos são testados com Mockito e MockMvc sem consulta ao ViaCEP real.
 
@@ -32,9 +32,7 @@ O cadastro `POST /clientes` é criação, não atualização: qualquer `id` envi
 
 ---
 
-## Documentação original preservada
-
-# Explorando Padrões de Projetos na Prática com Java
+## Referência do desafio: padrões de projeto em Java
 
 Repositório com as implementações dos padrões de projeto explorados no Lab "Explorando Padrões de Projetos na Prática com Java". Especificamente, este projeto explorou alguns padrões usando o Spring Framework, são eles:
 - Singleton
