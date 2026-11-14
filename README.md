@@ -16,6 +16,10 @@ cd lab-padroes-projeto-spring
 ./mvnw spring-boot:run
 ```
 
+## Correções do contrato HTTP
+
+O cadastro `POST /clientes` é criação, não atualização: qualquer `id` enviado pelo cliente é ignorado antes da persistência. O `PUT /clientes/{id}` responde com o registro **relido da persistência**, contendo o CEP normalizado e o ID realmente gravado, e não devolve simplesmente o JSON recebido. Esses dois casos são testados com Mockito e MockMvc sem consulta ao ViaCEP real.
+
 ## Mapa do projeto
 
 - [Requisitos](docs/REQUISITOS.md)
