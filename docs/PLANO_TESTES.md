@@ -33,3 +33,14 @@ O workflow `testes-clientes.yml` usa JDK 17 e Maven. `ClienteServiceImplTest` us
 - Benchmark do serviço, migrações de banco e auditoria de dependências.
 
 **Não confundir:** o teste unitário com mocks não comprova funcionamento do ViaCEP real ou de toda a API em produção.
+
+## DP 1.2.0 — limites do nome de cliente
+
+| Caso | Cenário | Evidência |
+| --- | --- | --- |
+| DP-13 | Nome vazio ou apenas espaços | HTTP 400 no serviço; zero chamadas ao banco ou ViaCEP |
+| DP-14 | Nome com 1–2 caracteres | HTTP 400; zero efeitos externos |
+| DP-15 | Nome com 101 caracteres | HTTP 400; zero efeitos externos |
+| DP-16 | Nome com exatamente 100 caracteres, espaços externos | Salvo após trim; ViaCEP usa o endereço do cache |
+
+Os testes estão em ClienteServiceImplTest, com Mockito e JUnit. Não executam ViaCEP real nem demonstram autenticação de usuários.
