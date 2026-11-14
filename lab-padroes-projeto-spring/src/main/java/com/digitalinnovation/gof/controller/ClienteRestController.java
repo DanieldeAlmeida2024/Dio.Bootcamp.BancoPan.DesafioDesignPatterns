@@ -48,8 +48,9 @@ public class ClienteRestController {
 	@PutMapping("/{id}")
 	public ResponseEntity<Cliente> atualizar(@PathVariable Long id, @RequestBody Cliente cliente) {
 		clienteService.atualizar(id, cliente);
-		cliente.setId(id); // O ID da URL prevalece sobre o enviado no corpo.
-		return ResponseEntity.ok(cliente);
+		// Retornar o registro persistido, não os dados brutos enviados
+		// (que podem trazer outro ID e CEP não normalizado).
+		return ResponseEntity.ok(clienteService.buscarPorId(id));
 	}
 
 	@DeleteMapping("/{id}")
