@@ -51,6 +51,10 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public void inserir(Cliente cliente) {
+        validarCliente(cliente);
+        // POST representa criação: ignorar IDs enviados pelo cliente para impedir
+        // que save(id existente) sobrescreva um cadastro anterior.
+        cliente.setId(null);
         salvarClienteComCep(cliente);
     }
 
