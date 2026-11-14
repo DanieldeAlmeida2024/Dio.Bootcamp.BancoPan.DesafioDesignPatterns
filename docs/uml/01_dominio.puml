@@ -1,0 +1,16 @@
+@startuml
+class Cliente { id; nome; endereco }
+class Endereco { cep; logradouro; bairro; localidade; uf }
+interface ClienteService { buscarTodos(); buscarPorId(); inserir(); atualizar(); deletar() }
+class ClienteServiceImpl { salvarClienteComCep() }
+interface ViaCepService { consultarCep(cep) }
+class ClienteRestController
+class ClienteRepository
+class EnderecoRepository
+ClienteService <|.. ClienteServiceImpl
+ClienteRestController --> ClienteService
+ClienteServiceImpl --> ClienteRepository
+ClienteServiceImpl --> EnderecoRepository
+ClienteServiceImpl --> ViaCepService
+Cliente --> Endereco
+@enduml

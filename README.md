@@ -42,3 +42,9 @@ Repositório com as implementações dos padrões de projeto explorados no Lab "
 ## Contrato de nome no cadastro de clientes
 
 O serviço valida nomes com **3 a 100 caracteres após remover espaços nas extremidades**, rejeitando entradas vazias, muito curtas ou extensas antes de consultar ViaCEP ou acessar repositórios. A mesma regra funciona quando o serviço é chamado sem passar pelo controlador REST. As regressões com Mockito verificam que nenhuma operação externa ocorre para um nome inválido.
+
+## Documentação específica do domínio
+
+[Especificação da implementação](docs/projeto/ESPECIFICACAO.md) · [Modelo e sequências UML](docs/uml/README.md) · [Matriz de testes histórica](docs/testes/PLANO_DE_TESTES.md) · [Histórico documental](docs/controle/VERSIONAMENTO.md).
+
+Esses arquivos preservam a modelagem original do exercício; as verificações executadas e os requisitos atuais estão no [plano de testes vigente](docs/PLANO_TESTES.md) e nas execuções do GitHub Actions.
