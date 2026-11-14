@@ -138,4 +138,28 @@ class ClienteServiceImplTest {
         assertEquals(HttpStatus.NOT_FOUND, erro.getStatusCode());
         verify(clienteRepository, never()).deleteById(11L);
     }
+
+    @Test
+    void nomesVaziosCurtosOuExtensosSaoRejeitadosAntesDoBancoOuViaCep() {
+        for (String nome : new String[] {"   ", " A ", "XY", "X".repeat(101)}) {
+            Cliente novo = cliente(nome, "01001-000");
+            ResponseStatusException erro = assertThrows(ResponseStatusException.class,
+                    () -> service.inserir(novo));
+            assertEquals(HttpStatus.BAD_REQUEST, erro.getStatusCode());
+        }
+        verifyNoInteractions(clienteRepository, enderecoRepository, viaCepService);
+    }
+
+    @Test
+    void nomeValidoComCemCaracteresEhNormalizado() {
+        String nome = "X".repeat(100);
+        Cliente novo = cliente("  " + nome + " ", "01001-000");
+        Endereco cache = new Endereco();
+        cache.setCep("01001000");
+        when(enderecoRepository.findById("01001000")).thenReturn(Optional.of(cache));
+        service.inserir(novo);
+        assertEquals(nome, novo.getNome());
+        verify(clienteRepository).save(same(novo));
+    }
+
 }
