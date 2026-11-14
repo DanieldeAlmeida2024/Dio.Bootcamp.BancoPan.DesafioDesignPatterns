@@ -1,0 +1,20 @@
+name: Testes de regras e persistência do laboratório
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  java:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: lab-padroes-projeto-spring/pom.xml
+      - run: mvn -B -ntp -f lab-padroes-projeto-spring/pom.xml test
