@@ -90,6 +90,39 @@ class ClienteServiceImplTest {
     }
 
     @Test
+    void atualizarViaCepInvalidoNaoMudaEntidadeExistente() {
+        Cliente registrado = cliente("Nome anterior", "01001000");
+        registrado.setId(42L);
+        Endereco enderecoAntigo = registrado.getEndereco();
+        when(clienteRepository.findById(42L)).thenReturn(Optional.of(registrado));
+        when(enderecoRepository.findById("22222222")).thenReturn(Optional.empty());
+        when(viaCepService.consultarCep("22222222")).thenReturn(null);
+
+        ResponseStatusException erro = assertThrows(ResponseStatusException.class,
+                () -> service.atualizar(42L, cliente("Nome novo", "22222-222")));
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, erro.getStatusCode());
+        assertEquals("Nome anterior", registrado.getNome(),
+                "Falha de fornecedor não pode mutar o nome da entidade gerenciada");
+        assertSame(enderecoAntigo, registrado.getEndereco(),
+                "Falha de fornecedor não pode mutar o endereço da entidade gerenciada");
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void atualizarCepMalformadoNaoMudaEntidadeNemConsultaFornecedor() {
+        Cliente registrado = cliente("Nome anterior", "01001000");
+        registrado.setId(42L);
+        when(clienteRepository.findById(42L)).thenReturn(Optional.of(registrado));
+        ResponseStatusException erro = assertThrows(ResponseStatusException.class,
+                () -> service.atualizar(42L, cliente("Nome novo", "nao-e-cep")));
+        assertEquals(HttpStatus.BAD_REQUEST, erro.getStatusCode());
+        assertEquals("Nome anterior", registrado.getNome());
+        assertEquals("01001000", registrado.getEndereco().getCep());
+        verifyNoInteractions(enderecoRepository, viaCepService);
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
     void postComIdInformadoPeloClienteNaoSobrescreveOutroCadastro() {
         Cliente novo = cliente("Ana", "01001-000");
         novo.setId(777L); // Não autorizar PUT disfarçado de POST.
