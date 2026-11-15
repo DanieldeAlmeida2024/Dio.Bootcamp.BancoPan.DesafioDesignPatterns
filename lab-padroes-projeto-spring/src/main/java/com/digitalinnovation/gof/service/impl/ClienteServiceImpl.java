@@ -63,9 +63,13 @@ public class ClienteServiceImpl implements ClienteService {
         // Atualiza o registro existente em vez de criar outro com id vindo do JSON.
         Cliente existente = buscarPorId(id);
         validarCliente(alteracoes);
-        existente.setNome(alteracoes.getNome().trim());
-        existente.setEndereco(alteracoes.getEndereco());
-        salvarClienteComCep(existente);
+        // Resolver e validar dependência externa antes de modificar entidade
+        // gerenciada. Falha ViaCEP não deve alterar o objeto em memória.
+        String novoNome = alteracoes.getNome().trim();
+        Endereco novoEndereco = resolverEndereco(alteracoes.getEndereco().getCep());
+        existente.setNome(novoNome);
+        existente.setEndereco(novoEndereco);
+        clienteRepository.save(existente);
     }
 
     @Override
@@ -76,9 +80,15 @@ public class ClienteServiceImpl implements ClienteService {
 
     private void salvarClienteComCep(Cliente cliente) {
         validarCliente(cliente);
-        String cep = normalizarCep(cliente.getEndereco().getCep());
+        Endereco endereco = resolverEndereco(cliente.getEndereco().getCep());
+        cliente.setNome(cliente.getNome().trim());
+        cliente.setEndereco(endereco);
+        clienteRepository.save(cliente);
+    }
 
-        Endereco endereco = enderecoRepository.findById(cep).orElseGet(() -> {
+    private Endereco resolverEndereco(String cepInformado) {
+        String cep = normalizarCep(cepInformado);
+        return enderecoRepository.findById(cep).orElseGet(() -> {
             Endereco consultado;
             try {
                 consultado = viaCepService.consultarCep(cep);
@@ -95,10 +105,6 @@ public class ClienteServiceImpl implements ClienteService {
             consultado.setCep(cep);
             return enderecoRepository.save(consultado);
         });
-
-        cliente.setNome(cliente.getNome().trim());
-        cliente.setEndereco(endereco);
-        clienteRepository.save(cliente);
     }
 
     private void validarCliente(Cliente cliente) {
